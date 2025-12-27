@@ -1,0 +1,107 @@
+﻿<head>
+    .slips { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:16px; }
+    .slip { background:#fff; border-radius:8px; padding:12px; box-shadow:0 2px 6px rgba(0,0,0,.1); }
+    .slip-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+    .numbers { display:grid; grid-template-columns: repeat(10, 1fr); gap:6px; }
+    .num { padding:6px 0; text-align:center; border-radius:4px; background:#eee; cursor:pointer; user-select:none; font-size:12px; }
+    .num.selected { background:#2e7d32; color:#fff; }
+    .footer { margin-top:8px; font-size:12px; color:#333; text-align:center; }
+  </style>
+</head>
+<body>
+  <h1>Bloquetos de Aposta – Mega-Sena</h1>
+
+
+  <div class="controls">
+    <button class="primary" onclick="addSlip()">Novo Bloqueto</button>
+    <button class="secondary" onclick="clearAll()">Limpar Tudo</button>
+  </div>
+
+
+  <div id="slips" class="slips"></div>
+
+
+  <script>
+    const STORAGE_KEY = 'mega_sena_slips_v1';
+
+
+    function load() {
+      const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      data.forEach(slip => renderSlip(slip));
+    }
+
+
+    function save() {
+      const slips = [...document.querySelectorAll('.slip')].map(slipEl => {
+        const selected = [...slipEl.querySelectorAll('.num.selected')].map(n => Number(n.dataset.num));
+        return selected;
+      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(slips));
+    }
+
+
+    function addSlip(numbers = []) {
+      renderSlip(numbers);
+      save();
+    }
+
+
+    function renderSlip(numbers) {
+      const slip = document.createElement('div');
+      slip.className = 'slip';
+
+
+      const header = document.createElement('div');
+      header.className = 'slip-header';
+      header.innerHTML = '<strong>Aposta</strong>';
+
+
+      const removeBtn = document.createElement('button');
+      removeBtn.textContent = 'X';
+      removeBtn.onclick = () => { slip.remove(); save(); };
+      header.appendChild(removeBtn);
+
+
+      const nums = document.createElement('div');
+      nums.className = 'numbers';
+
+
+      for (let i = 1; i <= 60; i++) {
+        const n = document.createElement('div');
+        n.className = 'num';
+        n.textContent = i.toString().padStart(2, '0');
+        n.dataset.num = i;
+        if (numbers.includes(i)) n.classList.add('selected');
+        n.onclick = () => {
+          n.classList.toggle('selected');
+          save();
+        };
+        nums.appendChild(n);
+      }
+
+
+      const footer = document.createElement('div');
+      footer.className = 'footer';
+      footer.textContent = 'Clique para marcar seus números (salvo automaticamente)';
+
+
+      slip.appendChild(header);
+      slip.appendChild(nums);
+      slip.appendChild(footer);
+
+
+      document.getElementById('slips').appendChild(slip);
+    }
+
+
+    function clearAll() {
+      if (!confirm('Deseja apagar todas as apostas?')) return;
+      document.getElementById('slips').innerHTML = '';
+      localStorage.removeItem(STORAGE_KEY);
+    }
+
+
+    load();
+  </script>
+</body>
+</html>
